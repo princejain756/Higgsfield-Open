@@ -6,7 +6,8 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import type { Surface } from "@/generation/catalog";
 
 import { swatchFor } from "./artwork";
-import { CROSS_VIEWS, SAMPLES, pickSamples, type GalleryView } from "./data";
+import { CROSS_VIEWS, SAMPLES, formatClock, pickSamples, type GalleryView } from "./data";
+import { estimate, type LatencyEstimate } from "./latency";
 import type { ActiveRun } from "./openhiggsfield-app";
 import {
   ArrowRightIcon,
@@ -20,25 +21,6 @@ import {
 } from "./icons";
 import { timeAgo, type RunRecord } from "./history";
 import { ModelIcon } from "./model-icon";
-
-const EMPTY: Record<GalleryView, { title: string; hint: string }> = {
-  image: {
-    title: "Your image runs land here",
-    hint: "Describe a subject below, pick a model, press Generate. Every finished run stays in this browser.",
-  },
-  video: {
-    title: "Your video runs land here",
-    hint: "Describe the shot below, pick a model, press Generate. Every finished run stays in this browser.",
-  },
-  assets: {
-    title: "Nothing generated yet",
-    hint: "Image and video runs both land in this grid and stay in this browser.",
-  },
-  favorites: {
-    title: "Nothing kept yet",
-    hint: "Hover a run and press its heart to keep it here. Kept runs stay put when older ones age out of the history.",
-  },
-};
 
 /* Action labels name the run they act on — tabbing a long grid otherwise
    reads as forty identical "Delete run"s. */
@@ -64,6 +46,7 @@ function slotsOf(runs: ActiveRun[], items: RunRecord[]): Slot[] {
         kind: "run",
         run: {
           id: item.id,
+          modelId: item.modelId,
           surface: item.surface,
           modelLabel: item.modelLabel,
           ratio: item.ratio,
@@ -356,7 +339,7 @@ export const Gallery = memo(function Gallery({
   onFavorite: (item: RunRecord) => void;
   onDownload: (item: RunRecord) => Promise<void>;
   onDelete: (item: RunRecord) => void;
-  onStarter: (prompt: string) => void;
+  onStarter: (prompt: string, modelId?: string) => void;
   galleryRef: RefObject<HTMLDivElement | null>;
 }) {
   const selecting = picked.size > 0;
@@ -486,14 +469,6 @@ function VirtualizedGrid({
   );
 }
 
-/* First run of the session. No placeholder scenery — the invitation carries
-   itself, and the three starters are the only thing on the ground because they
-   are the only thing here that is real: sample prompts, each showing the light
-   its seed would make. One click loads the
-   composer; pressing Generate stays the visitor’s call. Only the surface
-   scopes offer them: a starter writes one surface’s prompt, and Assets and
-   Favorites span both and are stocked from the other scopes, so they state the
-   gesture instead. */
 function Empty({
   view,
   surface,
@@ -501,52 +476,64 @@ function Empty({
 }: {
   view: GalleryView;
   surface: Surface;
-  onStarter: (prompt: string) => void;
+  onStarter: (prompt: string, modelId?: string) => void;
 }) {
   const thumbRatio = surface === "image" ? "4 / 3" : "16 / 9";
-  /* Reshuffled on every page load, and only after mount — picking during
-     render would hand the hydrating client a different three than the server
-     wrote. Until the picks land the server's three hold their space unseen, so
-     the invitation never jumps up the panel to make room for them. */
   const [samples, setSamples] = useState<string[] | null>(null);
   useEffect(() => setSamples(pickSamples(surface)), [surface]);
 
+  const title =
+    view === "favorites" ? "Nothing kept yet" : view === "assets" ? "The shelf is empty" : "Nothing here yet";
+  const hint =
+    view === "favorites"
+      ? "Press the heart on a run to keep it here."
+      : "Describe a shot, pick a model, and generate. Every price is the platform's own rate — no markup between you and it.";
+
+  /* One column of words and three starters. The studio is the composer; this
+     is the room it sits in, not a poster for the product. */
   return (
     <div className="ohf-empty">
       <div className="ohf-empty-copy">
-        <h2 className="ohf-empty-title">{EMPTY[view].title}</h2>
-        <p className="ohf-empty-hint">{EMPTY[view].hint}</p>
-
-        {!CROSS_VIEWS.has(view) && (
-          <ul
-            className="ohf-empty-starters"
-            style={samples ? undefined : { visibility: "hidden" }}
-          >
-            {(samples ?? SAMPLES[surface].slice(0, 3)).map((sample) => (
-              <li key={sample}>
-                <button type="button" className="ohf-starter" onClick={() => onStarter(sample)}>
-                  <span
-                    className="ohf-starter-thumb"
-                    style={{ background: swatchFor(surface, sample), aspectRatio: thumbRatio }}
-                  >
-                    <span className="ohf-grain" style={{ opacity: 0.24 }} />
-                  </span>
-                  <span className="ohf-starter-text">{sample}</span>
-                  <span className="ohf-starter-go">
-                    <ArrowRightIcon />
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        <h2 className="ohf-empty-title">{title}</h2>
+        <p className="ohf-empty-hint">{hint}</p>
       </div>
+      {!CROSS_VIEWS.has(view) && (
+        <ul className="ohf-empty-starters" style={samples ? undefined : { visibility: "hidden" }}>
+          {(samples ?? SAMPLES[surface].slice(0, 3)).map((sample) => (
+            <li key={sample}>
+              <button type="button" className="ohf-starter" onClick={() => onStarter(sample)}>
+                <span
+                  className="ohf-starter-thumb"
+                  style={{ background: swatchFor(surface, sample), aspectRatio: thumbRatio }}
+                >
+                  <span className="ohf-grain" style={{ opacity: 0.24 }} />
+                </span>
+                <span className="ohf-starter-text">{sample}</span>
+                <span className="ohf-starter-go">
+                  <ArrowRightIcon />
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
 
 function RunningTile({ run }: { run: ActiveRun }) {
   const [elapsed, setElapsed] = useState(0);
+  const [latency, setLatency] = useState<LatencyEstimate | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    void estimate(run.modelId, run.surface).then((next) => {
+      if (live) setLatency(next);
+    });
+    return () => {
+      live = false;
+    };
+  }, [run.modelId, run.surface]);
 
   useEffect(() => {
     const tick = () => setElapsed(Math.floor((Date.now() - run.startedAt) / 1000));
@@ -555,15 +542,38 @@ function RunningTile({ run }: { run: ActiveRun }) {
     return () => clearInterval(timer);
   }, [run.startedAt]);
 
+  /* The bar answers "how far along" with a saturating curve rather than a
+     fake percentage: progress rises quickly at first and flattens, which is
+     how long generations actually feel, and it never reaches 100% while the
+     run is still out. Past twice the ninetieth percentile the studio says so
+     instead of pretending the estimate still holds. */
+  const p50 = (latency?.p50 ?? 60_000) / 1000;
+  const p90 = (latency?.p90 ?? 150_000) / 1000;
+  const overrun = latency !== null && elapsed > p90 * 2;
+  const progress = overrun ? 1 : Math.min(0.985, 1 - Math.exp(-elapsed / Math.max(1, p50)));
+  const remaining = Math.round(p50 - elapsed);
+  const wide = latency !== null && latency.n < 5;
+  const eta = overrun
+    ? "Taking longer than usual"
+    : remaining > 0
+      ? wide
+        ? `${formatClock(p50)}–${formatClock(p90)}`
+        : `~${formatClock(remaining)} left`
+      : "Finishing up";
+
   return (
     <div
       className="ohf-skeleton"
       role="status"
-      aria-label={`${run.modelLabel} rendering`}
+      aria-label={`${run.modelLabel} rendering, ${eta}`}
     >
       <span className="ohf-skeleton-label">Rendering</span>
-      <span className="ohf-skeleton-clock">
-        {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}
+      <span className="ohf-skeleton-clock">{formatClock(elapsed)}</span>
+      <span className="ohf-skeleton-bar" aria-hidden>
+        <span className="ohf-skeleton-bar-fill" style={{ transform: `scaleX(${progress})` }} />
+      </span>
+      <span className="ohf-skeleton-eta" data-over={overrun || undefined}>
+        {eta}
       </span>
     </div>
   );

@@ -28,6 +28,11 @@ export interface RunRecord {
   /** Resolved catalog settings this run was submitted with, so reuse can
       restore the dials and not just the words. Absent on pre-existing records. */
   settings?: Record<string, unknown>;
+  /** The studio's own estimate in cents, frozen at submit time so the total on
+      a selection does not drift when platform rates change. */
+  estCents?: number;
+  /** The character a run was locked to, so a sequence can be grouped by it. */
+  sequenceTag?: string;
 }
 
 export const HISTORY_KEY = "history.v1";
@@ -151,7 +156,9 @@ function isRunRecord(value: unknown): value is RunRecord {
     (record.requestId === undefined || typeof record.requestId === "string") &&
     (record.favorite === undefined || typeof record.favorite === "boolean") &&
     (record.settings === undefined ||
-      (typeof record.settings === "object" && record.settings !== null))
+      (typeof record.settings === "object" && record.settings !== null)) &&
+    (record.estCents === undefined || typeof record.estCents === "number") &&
+    (record.sequenceTag === undefined || typeof record.sequenceTag === "string")
   );
 }
 

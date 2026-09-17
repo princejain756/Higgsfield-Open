@@ -296,3 +296,74 @@ export function formatClock(totalSeconds: number): string {
   const s = Math.max(0, Math.round(totalSeconds - m * 60));
   return `${m}:${String(s).padStart(2, "0")}`;
 }
+
+/* ---------- cost ----------
+
+   The catalog's headline rates were read off the platform's own price list on
+   RATES_AS_OF. They are estimates, not an invoice: the studio never sees the
+   platform's final charge, so every figure it shows is marked as one. */
+export const RATES_AS_OF = "September 2026";
+
+export type CostInput = {
+  /** Resolved duration setting, in seconds. Ignored by per-generation and
+      per-image rates. */
+  duration?: unknown;
+  /** Results this press produces: the batch stepper, or a model's own count. */
+  batch?: number;
+};
+
+const FALLBACK_SECONDS = 5;
+
+/** Seconds a press is billed for. A caller-supplied duration wins; otherwise
+    the model's own slider default; otherwise a floor, so entries without a
+    duration setting (Seedance 2.5 Edit) still price instead of showing
+    nothing. */
+function billableSeconds(model: ModelEntry, duration: unknown): number {
+  if (typeof duration === "number" && duration > 0) return duration;
+  const field = model.settings.duration;
+  return field?.type === "range" ? field.default : FALLBACK_SECONDS;
+}
+
+/** The estimated cost of one press, in cents (one decimal place is enough for
+    the smallest published rate). Null when the model carries no rate — the
+    caller shows nothing rather than a fabricated zero. Mills are kept integral
+    until the last step so $0.011 never drifts. */
+export function costCents(
+  model: ModelEntry,
+  { duration, batch = 1 }: CostInput = {},
+): number | null {
+  const rate = model.cost;
+  if (!rate) return null;
+  const count = Math.max(1, Math.round(batch));
+  let units = 1;
+  if (rate.unit === "second") {
+    units = billableSeconds(model, duration);
+  }
+  const mills = rate.milliCents * units * count;
+  return mills / 10;
+}
+
+/** Cents to a display string with at most three decimals and at least two, so
+    $0.995 keeps its fraction, $0.50 stays whole, and a real price never reads
+    as "$0.00". */
+export function formatCents(cents: number): string {
+  const dollars = Math.max(0, cents) / 100;
+  return `$${dollars.toFixed(3).replace(/0$/, "")}`;
+}
+
+/** The one-line arithmetic behind the composer's pill, for its tooltip:
+    rate, what it was multiplied by, then the total. */
+export function costBreakdown(
+  model: ModelEntry,
+  cents: number,
+  batch: number,
+  duration?: unknown,
+): string {
+  const rate = model.cost!;
+  const unitLabel = rate.unit === "second" ? "s" : rate.unit === "image" ? "image" : "generation";
+  const parts = [`≈ ${formatCents(rate.milliCents / 10)}/${unitLabel}`];
+  if (rate.unit === "second") parts.push(`${billableSeconds(model, duration)}s`);
+  if (batch > 1) parts.push(`× ${batch} results`);
+  parts.push(`= ≈ ${formatCents(cents)}`);
+  return parts.join(" ");
+}

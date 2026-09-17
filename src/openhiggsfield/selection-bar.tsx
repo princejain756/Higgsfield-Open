@@ -3,8 +3,9 @@
 import { useRef } from "react";
 import type { CSSProperties } from "react";
 
+import { formatCents } from "./data";
 import type { RunRecord } from "./history";
-import { CloseIcon, DownloadIcon, HeartIcon, PlayBadgeIcon, TrashIcon } from "./icons";
+import { CloseIcon, DownloadIcon, HeartIcon, PlayBadgeIcon, PlayIcon, TrashIcon } from "./icons";
 
 /** How many runs the count stack shows before it stops drawing new sheets. */
 const STACK = 3;
@@ -24,6 +25,7 @@ export interface SaveProgress {
 export function SelectionBar({
   records,
   saving,
+  onPlay,
   onDownload,
   onFavorite,
   onDelete,
@@ -31,6 +33,7 @@ export function SelectionBar({
 }: {
   records: RunRecord[];
   saving: SaveProgress | null;
+  onPlay: () => void;
   onDownload: () => void;
   onFavorite: () => void;
   onDelete: () => void;
@@ -44,6 +47,10 @@ export function SelectionBar({
 
   const count = shown.length;
   const saveable = shown.filter((record) => record.urls[0]).length;
+  /* A sequence needs at least two beats to be a sequence at all. */
+  const beats = shown.filter((record) => record.status === "completed" && record.urls[0]).length;
+  const estTotal = shown.reduce((sum, record) => sum + (record.estCents ?? 0), 0);
+  const anyCost = shown.some((record) => typeof record.estCents === "number");
   const allKept = shown.every((record) => record.favorite === true);
   const noun = count === 1 ? "run" : "runs";
 
@@ -99,9 +106,31 @@ export function SelectionBar({
           </span>{" "}
           selected
         </span>
+        {/* The selection's own cost. Frozen per record at submit time, so the
+            total does not drift when the platform's rate card changes. */}
+        {anyCost && <span className="ohf-selbar-cost">Σ ≈ {formatCents(estTotal)}</span>}
       </p>
 
       <span className="ohf-selbar-rule" aria-hidden />
+
+      <span
+        className="ohf-selbar-slot ohf-tip"
+        data-tip={
+          beats >= 2
+            ? `Preview and reorder ${beats} beats, then export them numbered`
+            : "Pick two or more finished runs to preview them as a sequence"
+        }
+      >
+        <button
+          type="button"
+          className="ohf-selact"
+          disabled={beats < 2}
+          aria-label="Play sequence"
+          onClick={onPlay}
+        >
+          <PlayIcon size={16} />
+        </button>
+      </span>
 
       <span className="ohf-selbar-slot ohf-tip" data-tip={downloadLabel}>
         <button

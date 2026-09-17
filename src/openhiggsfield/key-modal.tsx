@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Icon } from "@iconify/react";
 
 import { clearPlatformCredentials, savePlatformCredentials } from "@/generation/actions";
-
 import { CloseIcon } from "./icons";
 
 export function KeyModal({
@@ -19,7 +19,9 @@ export function KeyModal({
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const [apiKey, setApiKey] = useState("");
+
+  const [keyId, setKeyId] = useState("");
+  const [secretKey, setSecretKey] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,15 +30,40 @@ export function KeyModal({
     panelRef.current?.focus();
   }, []);
 
+  function handlePaste(event: React.ClipboardEvent<HTMLInputElement>) {
+    const text = event.clipboardData.getData("text").trim();
+    const clean = text.replace(/^(key|bearer)\s+/i, "");
+    if (clean.includes(":")) {
+      event.preventDefault();
+      const [first, ...rest] = clean.split(":");
+      setKeyId(first.trim());
+      setSecretKey(rest.join(":").trim());
+      setError(null);
+    }
+  }
+
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
+    const cleanId = keyId.trim();
+    const cleanSecret = secretKey.trim();
+
+    if (!cleanId || !cleanSecret) {
+      setError("Enter both your Key ID and Secret Key.");
+      return;
+    }
+
     setBusy(true);
     setError(null);
+
     try {
-      await savePlatformCredentials({ api_key: apiKey });
+      const result = await savePlatformCredentials({ keyId: cleanId, secretKey: cleanSecret });
+      if (!result.ok) {
+        setError(result.error ?? "Invalid credentials. Please check your Key ID and Secret Key.");
+        return;
+      }
       onSaved();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not save the key");
+      setError(caught instanceof Error ? caught.message : "Could not save credentials. Check your connection.");
     } finally {
       setBusy(false);
     }
@@ -47,14 +74,17 @@ export function KeyModal({
     setError(null);
     try {
       await clearPlatformCredentials();
-      setApiKey("");
+      setKeyId("");
+      setSecretKey("");
       onCleared();
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not remove the key");
+      setError(caught instanceof Error ? caught.message : "Could not remove credentials");
     } finally {
       setBusy(false);
     }
   }
+
+  const canSave = keyId.trim().length > 0 && secretKey.trim().length > 0;
 
   return (
     <dialog
@@ -69,12 +99,21 @@ export function KeyModal({
         <div className="ohf-keys-head">
           <div>
             <div id="ohf-keys-title" className="ohf-keys-title">
-              API key
+              API Credentials
             </div>
             <p className="ohf-keys-copy">
-              {configured
-                ? "A key is saved in this browser. Enter a new id:secret pair to replace it."
-                : "Paste your platform key as id:secret. It stays in an httpOnly cookie and is sent as Authorization: Key id:secret."}
+              Your credentials are saved in a private httpOnly cookie in this browser and sent directly to the Higgsfield API.
+            </p>
+            <p className="ohf-keys-copy" style={{ marginTop: "6px" }}>
+              <a
+                href="https://cloud.higgsfield.ai"
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: "var(--accent)", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "4px" }}
+              >
+                <span>Get your Key ID and Secret Key at cloud.higgsfield.ai</span>
+                <Icon icon="lucide:arrow-up-right" width="12" height="12" />
+              </a>
             </p>
           </div>
           <button type="button" className="ohf-icon-btn" aria-label="Close" onClick={onClose}>
@@ -84,32 +123,55 @@ export function KeyModal({
 
         <form className="ohf-keys-form" onSubmit={(event) => void onSubmit(event)}>
           <label className="ohf-field">
-            <div className="ohf-field-label">API key</div>
+            <div className="ohf-field-label">Key ID</div>
             <input
               className="ohf-input ohf-input--mono"
-              name="api_key"
-              type="password"
+              name="key_id"
+              type="text"
+              placeholder="Paste Key ID (or paste combined id:secret here)"
               autoComplete="off"
               spellCheck={false}
-              value={apiKey}
-              onChange={(event) => setApiKey(event.target.value)}
+              value={keyId}
+              onPaste={handlePaste}
+              onChange={(event) => {
+                setError(null);
+                setKeyId(event.target.value);
+              }}
+            />
+          </label>
+
+          <label className="ohf-field" style={{ marginTop: "10px" }}>
+            <div className="ohf-field-label">Secret Key</div>
+            <input
+              className="ohf-input ohf-input--mono"
+              name="secret_key"
+              type="password"
+              placeholder="Paste Secret Key"
+              autoComplete="off"
+              spellCheck={false}
+              value={secretKey}
+              onPaste={handlePaste}
+              onChange={(event) => {
+                setError(null);
+                setSecretKey(event.target.value);
+              }}
             />
           </label>
 
           {error && (
-            <div className="ohf-alert" role="alert">
+            <div className="ohf-alert" role="alert" style={{ marginTop: "12px" }}>
               <span className="ohf-alert-text">{error}</span>
             </div>
           )}
 
-          <div className="ohf-keys-actions">
+          <div className="ohf-keys-actions" style={{ marginTop: "16px" }}>
             {configured && (
               <button type="button" className="ohf-btn-quiet" disabled={busy} onClick={() => void onClear()}>
-                Remove key
+                Remove credentials
               </button>
             )}
-            <button type="submit" className="ohf-keys-save" disabled={busy || !apiKey.trim()}>
-              {busy ? "Saving…" : configured ? "Replace key" : "Save key"}
+            <button type="submit" className="ohf-keys-save" disabled={busy || !canSave}>
+              {busy ? "Saving…" : configured ? "Update credentials" : "Save credentials"}
             </button>
           </div>
         </form>

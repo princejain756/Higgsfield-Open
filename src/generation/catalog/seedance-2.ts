@@ -18,6 +18,7 @@ export const seedance2: ModelEntry = {
     ...seedanceSettings,
     resolution: { type: "enum", values: ["480p", "720p", "1080p", "4k"], default: "720p" },
   },
+  cost: { unit: "second", milliCents: 99 },
 };
 
 export const seedance2Fast: ModelEntry = {
@@ -29,6 +30,7 @@ export const seedance2Fast: ModelEntry = {
     ...seedanceSettings,
     resolution: { type: "enum", values: ["480p", "720p"], default: "720p" },
   },
+  cost: { unit: "second", milliCents: 55 },
 };
 
 export const seedance2Mini: ModelEntry = {
@@ -40,4 +42,5 @@ export const seedance2Mini: ModelEntry = {
     ...seedanceSettings,
     resolution: { type: "enum", values: ["480p", "720p"], default: "720p" },
   },
+  cost: { unit: "second", milliCents: 30 },
 };

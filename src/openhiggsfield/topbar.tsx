@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { Icon } from "@iconify/react";
+
 import { VIEWS, VIEW_LABELS, type GalleryView } from "./data";
 import { AssetsIcon, HeartIcon, ImageIcon, KeyIcon, VideoIcon } from "./icons";
 
@@ -18,12 +20,20 @@ export function Topbar({
   busy,
   keyConfigured,
   onKeys,
+  onOpenPricing,
+  onOpenChangelog,
+  unread,
 }: {
   view: GalleryView;
   onView: (next: GalleryView) => void;
   busy: boolean;
   keyConfigured: boolean;
   onKeys: () => void;
+  onOpenPricing?: () => void;
+  onOpenChangelog?: () => void;
+  /** Whether the newest release has been read. Accent is allowed here: the dot
+      signals state, not decoration. */
+  unread?: boolean;
 }) {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [thumb, setThumb] = useState<{ x: number; w: number } | null>(null);
@@ -74,7 +84,17 @@ export function Topbar({
     <div className="ohf-topbar">
       <h1 className="ohf-sr">OpenHiggsfield AI — Open source AI studio</h1>
 
-      <div className="ohf-bar ohf-enter-1">
+      {/* Brand Badge */}
+      <div className="ohf-bar ohf-bar--brand ohf-enter-1">
+        <div className="ohf-brand-block">
+          <span className="ohf-brand-glow-pip" />
+          <span className="ohf-brand-name">HIGGSFIELD</span>
+          <span className="ohf-brand-badge">STUDIO · US</span>
+        </div>
+      </div>
+
+      {/* Main Tabs */}
+      <div className="ohf-bar ohf-bar--tabs ohf-enter-1">
         <div
           className="ohf-tabs"
           role="tablist"
@@ -106,8 +126,6 @@ export function Topbar({
                 tabIndex={selected ? 0 : -1}
                 className="ohf-tab"
                 data-view={id}
-                /* Favorites is the one scope that goes icon-only on a narrow
-                   pill, so its name is stated rather than left to the mark. */
                 aria-label={VIEW_LABELS[id]}
                 title={id === "favorites" ? VIEW_LABELS[id] : undefined}
                 onClick={() => onView(id)}
@@ -120,10 +138,34 @@ export function Topbar({
         </div>
       </div>
 
-      {/* Generations run on the visitor's own platform key, so this both states
-          whether one is held and opens the modal that sets it — and its lamp is
-          the studio's liveness, the one place accent moves. */}
-      <div className="ohf-bar ohf-enter-1">
+      {/* Benchmark & Key Actions */}
+      <div className="ohf-bar ohf-bar--actions ohf-enter-1">
+        {onOpenChangelog && (
+          <button
+            type="button"
+            className="ohf-topbar-act ohf-topbar-act--changelog"
+            onClick={onOpenChangelog}
+            aria-label={unread ? "What's new — unread updates" : "What's new"}
+            title="What's new — release history"
+          >
+            <Icon icon="lucide:history" width="13" height="13" />
+            <span className="ohf-act-text">Changelog</span>
+            {unread && <span className="ohf-topbar-unread" aria-hidden />}
+          </button>
+        )}
+
+        {onOpenPricing && (
+          <button
+            type="button"
+            className="ohf-topbar-act"
+            onClick={onOpenPricing}
+            title="Benchmark: Higgsfield vs Runway, Luma, Kling"
+          >
+            <Icon icon="lucide:zap" width="13" height="13" />
+            <span className="ohf-act-text">Compare</span>
+          </button>
+        )}
+
         <button
           type="button"
           className="ohf-key"
@@ -134,7 +176,7 @@ export function Topbar({
           title={keyConfigured ? "Edit platform key" : "Add platform key"}
         >
           <KeyIcon />
-          <span className="ohf-key-text">{keyConfigured ? "Your key" : "Add key"}</span>
+          <span className="ohf-key-text">{keyConfigured ? "API Ready" : "Add Key"}</span>
           <span className="ohf-lamp" />
         </button>
       </div>

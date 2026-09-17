@@ -2,16 +2,22 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
+import { Icon } from "@iconify/react";
 
 import { parseSettings } from "@/generation/catalog";
 import type { ModelEntry, Surface } from "@/generation/catalog";
+import { SHOTS, validShotSettings, type ShotPreset } from "@/generation/shots";
 import { MAX_BATCH, useActive } from "@/generation/stores/active";
+import { activeCharacterOf, useCharacters } from "@/generation/stores/character";
 import { useImagePrompt, useVideoPrompt } from "@/generation/stores/prompt";
 import { useSettings } from "@/generation/stores/settings";
 
 import { swatchFor } from "./artwork";
 import { AssetPicker } from "./asset-picker";
-import { PROMPT_PLACEHOLDERS, countSetting } from "./data";
+import { CharacterPanel } from "./character-panel";
+import { appendCraft } from "./craft";
+import { CraftPanel } from "./craft-panel";
+import { PROMPT_PLACEHOLDERS, costBreakdown, costCents, countSetting, formatCents } from "./data";
 import type { RunRecord } from "./history";
 import { ArrowUpIcon, CaretDownIcon, CloseIcon, MinusIcon, PlusIcon, WarningIcon } from "./icons";
 import { MediaStrip, useMediaTray } from "./media-tray";
@@ -24,7 +30,13 @@ import { SettingPill, SettingPopover } from "./settings";
    closed union. */
 const PICKER = "picker";
 const ASSETS = "assets";
+const CRAFT = "craft";
+const CHARACTER = "character";
 const SETTING = "setting:";
+
+/* Above this many cents the press stops being a reflex and asks once. The
+   number is deliberately high enough that ordinary work never meets it. */
+const CONFIRM_CENTS = 500;
 
 const PROMPT_MAX_HEIGHT = 168;
 
@@ -37,7 +49,8 @@ const POPOVER_GAP = 8;
 
 /** Declared widths keep an opening popover inside the composer's own column. */
 function popoverWidth(id: string, model: ModelEntry): number {
-  if (id === PICKER || id === ASSETS) return 560;
+  if (id === PICKER || id === ASSETS || id === CRAFT) return 560;
+  if (id === CHARACTER) return 420;
   /* A list of an enum's values is the narrow panel; a slider needs its travel. */
   if (id.startsWith(SETTING) && model.settings[id.slice(SETTING.length)]?.type === "enum") {
     return 216;
@@ -85,10 +98,17 @@ export function Composer({
   const settings = useSettings();
   const values = parseSettings(model, settings.byModel[model.id] ?? {});
   const tray = useMediaTray(model, onError);
+  const activeCharacter = useCharacters(activeCharacterOf);
+
+  /* Face-lock is only offered where the model takes reference stills and the
+     surface is video; Seedance 2.5 is the entry that declares both. */
+  const faceLock = model.faceLock === true && surface === "video" && (model.roles.reference ?? 0) > 0;
 
   const [overlay, setOverlay] = useState<string | null>(null);
   const [anchor, setAnchor] = useState({ x: 0, y: 0 });
   const [shortcut, setShortcut] = useState<string | null>(null);
+  /* A press that costs more than CONFIRM_CENTS arms here instead of leaving. */
+  const [confirming, setConfirming] = useState(false);
   const dockRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const promptRef = useRef<HTMLTextAreaElement>(null);
@@ -104,6 +124,30 @@ export function Composer({
   const counts = native ? native.counts : STUDIO_COUNTS;
   const batchValue = native ? Number(values[native.key]) || counts[0]! : batch;
   const settingKeys = Object.keys(model.settings).filter((key) => key !== native?.key);
+
+  /* Both figures are estimates from the catalog's published rate, marked as
+     such everywhere they appear. Null means the model carries no rate, and the
+     composer then shows no price rather than inventing a zero. */
+  const estCents = costCents(model, { duration: values.duration, batch: batchValue });
+  const singleCents = costCents(model, { duration: values.duration, batch: 1 });
+  const needsConfirm = estCents !== null && estCents > CONFIRM_CENTS;
+
+  /* The gate is one press wide: the button asks once, and only for a costly
+     batch. Anything cheaper goes straight through, as does the confirm itself. */
+  function pressGenerate() {
+    if (needsConfirm && !confirming) {
+      setConfirming(true);
+      return;
+    }
+    setConfirming(false);
+    onGenerate();
+  }
+
+  /* A new model, duration or count is a new price — the armed state must not
+     carry over to it. */
+  useEffect(() => {
+    setConfirming(false);
+  }, [model.id, batchValue, values.duration]);
 
   function setBatchValue(next: number) {
     if (!native) {
@@ -213,6 +257,18 @@ export function Composer({
   const generateLabel = batchValue > 1 ? `Generate ${batchValue} results` : "Generate";
   const generateTip = disabled ? "Write a prompt first" : `${generateLabel} · ${shortcut ?? "⌘↵"}`;
 
+  /* A shot preset writes both halves: the phrase into the prompt, the framing
+     settings the model accepts into the catalog store. */
+  function applyShot(shot: ShotPreset) {
+    prompt.setText(appendCraft(prompt.text, shot.phrase));
+    const patch = validShotSettings(model, shot);
+    if (Object.keys(patch).length > 0) settings.set(model.id, patch);
+  }
+
+  const characterLabel = activeCharacter
+    ? `${activeCharacter.name} · ${activeCharacter.refs.length}/${model.roles.reference ?? 0}`
+    : "Face-lock";
+
   return (
     <div className="ohf-dock" ref={dockRef} data-selecting={selecting}>
       <div
@@ -245,7 +301,47 @@ export function Composer({
           </div>
         )}
 
+        {confirming && estCents !== null && (
+          <div className="ohf-confirm" role="alertdialog" aria-label="Confirm large batch">
+            <span className="ohf-confirm-text">
+              {generateLabel} is estimated at ≈ {formatCents(estCents)} — press again to confirm.
+            </span>
+            <button type="button" className="ohf-confirm-go" onClick={pressGenerate}>
+              Generate ≈ {formatCents(estCents)}
+            </button>
+            <button
+              type="button"
+              className="ohf-icon-btn ohf-icon-btn--ghost"
+              aria-label="Cancel"
+              title="Cancel"
+              onClick={() => setConfirming(false)}
+            >
+              <CloseIcon size={12} />
+            </button>
+          </div>
+        )}
+
         {settingKey && <SettingPopover model={model} settingKey={settingKey} values={values} />}
+        {overlay === CRAFT && (
+          <CraftPanel
+            model={model}
+            promptText={prompt.text}
+            onApply={prompt.setText}
+            shots={faceLock ? SHOTS : undefined}
+            onApplyShot={applyShot}
+          />
+        )}
+        {overlay === CHARACTER && (
+          <CharacterPanel
+            model={model}
+            uploads={tray.uploads}
+            history={history}
+            staged={tray.staged}
+            uploading={tray.uploading}
+            onUpload={() => tray.begin("reference")}
+            onClose={() => setOverlay(null)}
+          />
+        )}
         {overlay === ASSETS && (
           <AssetPicker
             model={model}
@@ -321,7 +417,7 @@ export function Composer({
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                     event.preventDefault();
-                    if (!disabled) onGenerate();
+                    if (!disabled) pressGenerate();
                   }
                 }}
               />
@@ -348,6 +444,42 @@ export function Composer({
                   </span>
                 </button>
 
+                <button
+                  type="button"
+                  className="ohf-ctl ohf-ctl--craft ohf-tip"
+                  data-tip="Prompt craft — tags, tips, surprise me"
+                  aria-expanded={overlay === CRAFT}
+                  aria-haspopup="dialog"
+                  onClick={(event) => toggle(CRAFT, event.currentTarget)}
+                >
+                  <Icon
+                    icon="lucide:sparkles"
+                    width="14"
+                    height="14"
+                    style={{ color: "var(--accent)" }}
+                  />
+                  <span className="ohf-ctl-name">Craft</span>
+                </button>
+
+                {faceLock && (
+                  <button
+                    type="button"
+                    className="ohf-ctl ohf-ctl--character ohf-tip"
+                    data-on={activeCharacter ? "true" : undefined}
+                    data-tip={
+                      activeCharacter
+                        ? `${activeCharacter.name} — ${activeCharacter.refs.length} reference still${activeCharacter.refs.length === 1 ? "" : "s"}`
+                        : "Lock a face across shots with reference stills"
+                    }
+                    aria-expanded={overlay === CHARACTER}
+                    aria-haspopup="dialog"
+                    onClick={(event) => toggle(CHARACTER, event.currentTarget)}
+                  >
+                    <Icon icon="lucide:user-round-check" width="14" height="14" />
+                    <span className="ohf-ctl-name">{characterLabel}</span>
+                  </button>
+                )}
+
                 {settingKeys.map((key) => (
                   <SettingPill
                     key={key}
@@ -362,6 +494,28 @@ export function Composer({
                 <BatchStepper value={batchValue} counts={counts} onChange={setBatchValue} />
               </div>
 
+              {/* The price rides with the button that spends it: quiet enough
+                  to ignore, exact enough to trust. Hidden for a model with no
+                  published rate. */}
+              {estCents !== null && (
+                <span
+                  className="ohf-cost ohf-tip ohf-tip--end"
+                  data-tip={costBreakdown(model, estCents, batchValue, values.duration)}
+                >
+                  {batchValue > 1 && singleCents !== null ? (
+                    <>
+                      <span className="ohf-cost-unit">
+                        {batchValue} × ≈ {formatCents(singleCents)}
+                      </span>
+                      <span className="ohf-cost-sep" aria-hidden>
+                        =
+                      </span>
+                    </>
+                  ) : null}
+                  <span className="ohf-cost-total">≈ {formatCents(estCents)}</span>
+                </span>
+              )}
+
               <span className="ohf-generate-slot ohf-tip ohf-tip--end" data-tip={generateTip}>
                 <button
                   type="button"
@@ -369,7 +523,7 @@ export function Composer({
                   disabled={disabled}
                   data-busy={generating}
                   aria-label={generateLabel}
-                  onClick={onGenerate}
+                  onClick={pressGenerate}
                 >
                   {/* The sheen is the only thing a run in flight changes here:
                       the label still names what pressing does, because pressing

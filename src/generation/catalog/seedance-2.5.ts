@@ -17,6 +17,8 @@ export const seedance25: ModelEntry = {
     duration: { type: "range", min: 4, max: 30, default: 5 },
     ...seedance25Settings,
   },
+  cost: { unit: "second", milliCents: 144 },
+  faceLock: true,
 };
 
 export const seedance25Edit: ModelEntry = {
@@ -25,6 +27,7 @@ export const seedance25Edit: ModelEntry = {
   label: "Seedance 2.5 Edit",
   roles: { video: 1, reference: 30, audio: 10 },
   settings: seedance25Settings,
+  cost: { unit: "second", milliCents: 144 },
 };
 
 export const seedance25Extend: ModelEntry = {
@@ -36,4 +39,5 @@ export const seedance25Extend: ModelEntry = {
     duration: { type: "range", min: 4, max: 30, default: 5 },
     ...seedance25Settings,
   },
+  cost: { unit: "second", milliCents: 144 },
 };

@@ -14,12 +14,14 @@ export const soulCinema: ModelEntry = {
   label: "Soul Cinema",
   roles: {},
   settings: soulSettings,
+  cost: { unit: "image", milliCents: 94 },
 };
 
 export const soul2: ModelEntry = {
   id: "soul-2",
   surface: "image",
-  label: "Soul 2",
+  label: "Soul 2 Studio",
   roles: {},
   settings: soulSettings,
+  cost: { unit: "image", milliCents: 3 },
 };

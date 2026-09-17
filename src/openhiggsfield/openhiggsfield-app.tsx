@@ -7,6 +7,7 @@ import { MissingCredentialsError } from "@/generation/credentials";
 import { MODELS, getModel } from "@/generation/catalog";
 import type { Surface } from "@/generation/catalog";
 import { assemblePlane } from "@/generation/plane";
+import { PlatformError } from "@/generation/platform";
 import type { GenerationStatus } from "@/generation/platform";
 import { POLL_DEADLINE_MS, stopWatching, watchRequest } from "@/generation/poll";
 import { useActive } from "@/generation/stores/active";
@@ -14,11 +15,14 @@ import { useImagePrompt, useVideoPrompt } from "@/generation/stores/prompt";
 import { useSettings } from "@/generation/stores/settings";
 
 import { GRAIN_URI, artFor } from "./artwork";
+import { BottomNav } from "./bottom-nav";
+import { ChangelogModal, useUnreadRelease } from "./changelog";
 import { Composer } from "./composer";
-import { fileNameFor, saveFile } from "./download";
+import { fileNameFor, saveFile, sequenceFileName } from "./download";
 import { KeyModal } from "./key-modal";
 import {
   CROSS_VIEWS,
+  costCents,
   countSetting,
   durationBadge,
   metaOf,
@@ -28,9 +32,13 @@ import {
 import { Gallery } from "./gallery";
 import { loadHistory, mergeHistory, replaceRequest, saveHistory, stepRun, type RunRecord } from "./history";
 import { CloseIcon, UndoIcon } from "./icons";
+import { recordDuration } from "./latency";
+import { PricingModal } from "./pricing-modal";
 import { SelectionBar, type SaveProgress } from "./selection-bar";
+import { SequencePlayer } from "./sequence-player";
 import { Topbar } from "./topbar";
 import { Viewer } from "./viewer";
+import { useCharacters } from "@/generation/stores/character";
 
 /* Long enough to read the bar and reach it; the drain line states the window. */
 const UNDO_MS = 6000;
@@ -39,6 +47,9 @@ export interface ActiveRun {
   /** Identifies the skeleton this run occupies, so a batch clears one tile at
       a time as its own request settles. */
   id: string;
+  /** The catalog entry, so the tile can look up what this model usually
+      takes without reaching into the draft. */
+  modelId: string;
   surface: Surface;
   modelLabel: string;
   ratio: string;
@@ -54,6 +65,8 @@ type RunDraft = {
   meta: string;
   badge?: string;
   settings?: Record<string, unknown>;
+  estCents?: number;
+  sequenceTag?: string;
   createdAt: number;
 };
 
@@ -77,6 +90,8 @@ function draftOf(record: RunRecord): RunDraft {
     meta: record.meta,
     badge: record.badge,
     settings: record.settings,
+    estCents: record.estCents,
+    sequenceTag: record.sequenceTag,
     createdAt: record.createdAt,
   };
 }
@@ -100,6 +115,8 @@ function runningRows(requestId: string, count: number, draft: RunDraft): RunReco
       art: artFor(draft.surface, hueOf(id), id),
       createdAt: draft.createdAt,
       settings: draft.settings,
+      estCents: draft.estCents,
+      sequenceTag: draft.sequenceTag,
     };
   });
 }
@@ -130,6 +147,8 @@ function terminalRows(requestId: string, draft: RunDraft, status: GenerationStat
       art: artFor(draft.surface, hueOf(id), id),
       createdAt: draft.createdAt,
       settings: draft.settings,
+      estCents: draft.estCents,
+      sequenceTag: draft.sequenceTag,
     };
   });
 }
@@ -149,12 +168,49 @@ function failureText(status: GenerationStatus): string {
   return "the platform reported a failure";
 }
 
-function describeError(caught: unknown): string {
-  const message = caught instanceof Error ? caught.message : String(caught);
-  if (caught instanceof MissingCredentialsError || message.includes("Missing platform key")) {
-    return "Add your platform key to generate.";
+/** A key problem, not a run problem: the studio can hand the fix back. */
+function isSubmitFailure(value: unknown): value is { ok: false; error: string; status?: number; requiresKey?: boolean } {
+  return value !== null && typeof value === "object" && "ok" in value && (value as { ok: unknown }).ok === false;
+}
+
+function rejectsKey(caught: unknown): boolean {
+  if (isSubmitFailure(caught)) {
+    return caught.requiresKey === true || caught.status === 401 || caught.status === 403;
   }
-  return `Generation failed — ${message}. Try again; if it repeats, check the key in the sidebar.`;
+  return (
+    caught instanceof MissingCredentialsError ||
+    (caught instanceof PlatformError && (caught.status === 401 || caught.status === 403))
+  );
+}
+
+/* Poll-path failures arrive as plain Errors ("Missing platform key"), so the
+   raw message is checked here — the humanized copy from describeError must
+   stay free to say "credentials" without retriggering the modal. */
+function mentionsPlatformKey(caught: unknown): boolean {
+  const raw = caught instanceof Error ? caught.message : String(caught);
+  return raw.includes("platform key");
+}
+
+function describeError(caught: unknown): string {
+  if (isSubmitFailure(caught)) {
+    if (caught.requiresKey || caught.status === 401 || caught.status === 403) {
+      return "Your API credentials were rejected — check your Key ID and Secret Key.";
+    }
+    if (caught.error.includes("Missing platform key")) {
+      return "Add your API credentials to generate.";
+    }
+    return `Generation failed — ${caught.error}. Try again; if it repeats, update your API credentials.`;
+  }
+  if (rejectsKey(caught)) {
+    return caught instanceof MissingCredentialsError
+      ? "Add your API credentials to generate."
+      : "Your API credentials were rejected — check your Key ID and Secret Key.";
+  }
+  const message = caught instanceof Error ? caught.message : String(caught);
+  if (message.includes("Missing platform key") || message.includes("platform key")) {
+    return "Add your API credentials to generate.";
+  }
+  return `Generation failed — ${message}. Try again; if it repeats, update your API credentials.`;
 }
 
 export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: string }) {
@@ -181,6 +237,10 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
   const [saving, setSaving] = useState<SaveProgress | null>(null);
   const [keyConfigured, setKeyConfigured] = useState(false);
   const [keysOpen, setKeysOpen] = useState(false);
+  const [pricingOpen, setPricingOpen] = useState(false);
+  const [changelogOpen, setChangelogOpen] = useState(false);
+  const [sequenceOpen, setSequenceOpen] = useState(false);
+  const { unread, markSeen } = useUnreadRelease();
 
   const galleryRef = useRef<HTMLDivElement>(null);
   const rangeAnchor = useRef<number | null>(null);
@@ -258,6 +318,15 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
         });
         if (!alive.current) return;
         const records = terminalRows(requestId, draft, status);
+        /* Only a delivery says anything about how long a delivery takes; a
+           failure would drag every estimate toward zero. */
+        if (status.status === "completed") {
+          void recordDuration({
+            modelId: draft.modelId,
+            surface: draft.surface,
+            ms: Date.now() - draft.createdAt,
+          });
+        }
         setHistory((prev) => {
           const next = replaceRequest(prev, requestId, records);
           void saveHistory(next);
@@ -274,7 +343,7 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
       } catch (caught) {
         if (!alive.current) return;
         const message = describeError(caught);
-        if (message.includes("platform key")) setKeysOpen(true);
+        if (rejectsKey(caught) || mentionsPlatformKey(caught)) setKeysOpen(true);
         setHistory((prev) => {
           const next = replaceRequest(prev, requestId, failedRows(requestId, expected, draft, message));
           void saveHistory(next);
@@ -326,7 +395,7 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
   const generate = useCallback(async () => {
     if (!keyConfigured) {
       setKeysOpen(true);
-      setError("Add your platform key to generate.");
+      setError("Add your API credentials to generate.");
       return;
     }
     const plane = assemblePlane();
@@ -348,10 +417,31 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
     const expected = native
       ? Math.max(1, Number(plane.settings[native.key]) || 1)
       : useActive.getState().batch;
+
+    /* Face-lock: the active character's stills join the plane's reference slot
+       before mapping, clamped to the model's own cap and deduped by URL. The
+       tray may have contributed references too, so both sets ride together. */
+    const character = useCharacters.getState().characters.find(
+      (candidate) => candidate.id === useCharacters.getState().activeId,
+    );
+    const refCap = entry.roles.reference ?? 0;
+    if (character && entry.faceLock === true && refCap > 0) {
+      const merged = [...(plane.media.reference ?? [])];
+      const seen = new Set(merged.map((item) => item.url));
+      for (const ref of character.refs) {
+        if (merged.length >= refCap) break;
+        if (seen.has(ref.url)) continue;
+        seen.add(ref.url);
+        merged.push({ id: ref.id, url: ref.url, role: "reference" });
+      }
+      if (merged.length > 0) plane.media = { ...plane.media, reference: merged.slice(0, refCap) };
+    }
+
     const startedAt = Date.now();
     const seq = ++press.current;
     const pending: ActiveRun[] = Array.from({ length: expected }, (_, index) => ({
       id: `pending-${seq}-${index}`,
+      modelId: entry.id,
       surface: entry.surface,
       modelLabel: entry.label,
       ratio,
@@ -369,6 +459,8 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
       meta,
       badge,
       settings: plane.settings,
+      estCents: costCents(entry, { duration: plane.settings.duration, batch: expected }) ?? undefined,
+      sequenceTag: character && entry.faceLock === true ? character.id : undefined,
       createdAt: startedAt,
     };
 
@@ -380,6 +472,16 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
     const runOne = async (slot: { skeletons: string[] }) => {
       try {
         const queued = await submitGeneration(plane);
+        if (!queued.ok) {
+          if (!alive.current) return;
+          const message = describeError(queued);
+          if (rejectsKey(queued)) {
+            setKeysOpen(true);
+          }
+          setError((prev) => prev ?? message);
+          return;
+        }
+
         setHistory((prev) => {
           const next = [...runningRows(queued.requestId, slot.skeletons.length, draft), ...prev];
           void saveHistory(next);
@@ -390,7 +492,9 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
       } catch (caught) {
         if (!alive.current) return;
         const message = describeError(caught);
-        if (message.includes("platform key")) setKeysOpen(true);
+        if (rejectsKey(caught) || mentionsPlatformKey(caught)) {
+          setKeysOpen(true);
+        }
         setError((prev) => prev ?? message);
       } finally {
         if (alive.current) {
@@ -563,14 +667,15 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
 
   /* Saved one at a time on purpose: browsers throttle a burst of downloads into
      a single "allow multiple files?" prompt and drop the rest, and a sequence is
-     the only version that can report how far it got. */
-  const downloadPicked = useCallback(async () => {
-    const files = pickedRecords.filter((record) => record.urls[0]);
+     the only version that can report how far it got. Names are numbered in the
+     order given, so a sequence lands in a downloads folder already sorted. */
+  const downloadList = useCallback(async (records: RunRecord[]) => {
+    const files = records.filter((record) => record.urls[0]);
     if (files.length === 0) return;
     setSaving({ done: 0, total: files.length });
     let refused = 0;
     for (const [index, record] of files.entries()) {
-      const ok = await saveFile(record.urls[0]!, fileNameFor(record, index));
+      const ok = await saveFile(record.urls[0]!, sequenceFileName(record, index));
       if (!ok) refused++;
       setSaving({ done: index + 1, total: files.length });
     }
@@ -582,21 +687,49 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
           : `${refused} of ${files.length} files could not be saved — the platform’s CDN refused the read. Open those runs to save them from the browser.`,
       );
     }
-  }, [pickedRecords]);
+  }, []);
+
+  const downloadPicked = useCallback(
+    () => void downloadList(pickedRecords),
+    [downloadList, pickedRecords],
+  );
+
+  /* The preview owns its own order, so an export from it names the files in the
+     order the visitor arranged, not the order they picked. */
+  const downloadSequence = useCallback(
+    (ordered: RunRecord[]) => void downloadList(ordered),
+    [downloadList],
+  );
 
   /* An empty-gallery starter loads the composer and hands the visitor the
-     caret; pressing Generate stays their call. */
+     caret; pressing Generate stays their call. If a modelId is passed,
+     it automatically switches the active model too. */
   const applyStarter = useCallback(
-    (text: string) => {
-      (surface === "image" ? useImagePrompt : useVideoPrompt).getState().setText(text);
+    (text: string, newModelId?: string) => {
+      const entry = newModelId ? MODELS.find((m) => m.id === newModelId) : undefined;
+      if (entry) {
+        setView(entry.surface);
+        setModel(entry.id);
+      }
+      const target = entry?.surface ?? surface;
+      (target === "image" ? useImagePrompt : useVideoPrompt).getState().setText(text);
       setError(null);
       setFocusNonce((n) => n + 1);
     },
-    [surface],
+    [surface, setModel],
   );
 
   const openViewer = useCallback((id: string) => setViewerId(id), []);
   const openKeys = useCallback(() => setKeysOpen(true), []);
+  const openPricing = useCallback(() => setPricingOpen(true), []);
+  /* Opening the log is what reads it: the pip clears on the press, not on a
+     timer the visitor never agreed to. */
+  const openChangelog = useCallback(() => {
+    setChangelogOpen(true);
+    markSeen();
+  }, [markSeen]);
+  const openSequence = useCallback(() => setSequenceOpen(true), []);
+  const closeSequence = useCallback(() => setSequenceOpen(false), []);
   const runGenerate = useCallback(() => void generate(), [generate]);
   const downloadSelection = useCallback(() => void downloadPicked(), [downloadPicked]);
   const dismissDeleted = useCallback(() => setDeleted(null), []);
@@ -630,6 +763,9 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
             busy={busy}
             keyConfigured={keyConfigured}
             onKeys={openKeys}
+            onOpenPricing={openPricing}
+            onOpenChangelog={openChangelog}
+            unread={unread}
           />
 
           <Gallery
@@ -661,6 +797,7 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
               <SelectionBar
                 records={pickedRecords}
                 saving={saving}
+                onPlay={openSequence}
                 onDownload={downloadSelection}
                 onFavorite={favoritePicked}
                 onDelete={deletePicked}
@@ -678,6 +815,13 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
                 />
               )
             }
+          />
+
+          <BottomNav
+            view={view}
+            onView={switchView}
+            onOpenChangelog={openChangelog}
+            unread={unread}
           />
         </main>
 
@@ -709,6 +853,24 @@ export function OpenHiggsfieldApp({ fontClassName = "" }: { fontClassName?: stri
             onCleared={() => {
               setKeyConfigured(false);
             }}
+          />
+        )}
+        {pricingOpen && (
+          <PricingModal
+            isOpen={pricingOpen}
+            onClose={() => setPricingOpen(false)}
+            onConfigureKey={() => {
+              setPricingOpen(false);
+              setKeysOpen(true);
+            }}
+          />
+        )}
+        {changelogOpen && <ChangelogModal onClose={() => setChangelogOpen(false)} />}
+        {sequenceOpen && pickedRecords.length >= 2 && (
+          <SequencePlayer
+            records={pickedRecords}
+            onExport={downloadSequence}
+            onClose={closeSequence}
           />
         )}
       </div>

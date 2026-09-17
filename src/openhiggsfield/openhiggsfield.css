@@ -338,10 +338,17 @@
   }
 }
 
-/* ---------- shell ---------- */
+.ohf {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
 
 .ohf-shell {
-  height: 100dvh;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
   overflow: hidden;
   background: var(--bg);
   position: relative;
@@ -1106,6 +1113,7 @@
   flex-direction: column;
   gap: 7px;
   width: 100%;
+  max-width: 544px;
   margin: 13px 0 0;
   padding: 0;
   list-style: none;
@@ -1150,6 +1158,7 @@
   color: var(--tx2);
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   transition: color 0.16s ease;
@@ -1503,6 +1512,23 @@
 }
 .ohf-selbar[data-on="true"] > :nth-child(7) {
   animation-delay: 0.155s;
+}
+.ohf-selbar[data-on="true"] > :nth-child(8) {
+  animation-delay: 0.18s;
+}
+/* A running total of what the selection already cost — read off each record,
+   not recomputed, so it never disagrees with the pill that was shown when the
+   run was submitted. */
+.ohf-selbar-cost {
+  flex: none;
+  padding-left: 9px;
+  margin-left: 2px;
+  border-left: 1px solid var(--line-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--tx2);
+  white-space: nowrap;
 }
 
 .ohf-selbar-count {
@@ -3519,10 +3545,141 @@ a.ohf-btn-solid {
   }
 }
 
+/* ---------- mobile & tablet bottom navigation bar ---------- */
+
+.ohf-bottom-nav {
+  display: none;
+}
+
 /* Under this the sidebar can no longer stand beside a picture without
    starving it, so the two stack: the work keeps the upper field and the panel
    takes the rest, scrolling its own body. */
 @media (max-width: 900px) {
+  /* Hide the center tabs bar in the topbar on mobile/tablet */
+  .ohf-topbar .ohf-bar--tabs {
+    display: none !important;
+  }
+  .ohf-topbar .ohf-topbar-act--changelog {
+    display: none !important;
+  }
+
+  /* Make topbar spread cleanly: brand on left, actions on right */
+  .ohf-topbar {
+    justify-content: space-between !important;
+    width: 100%;
+    padding: 10px 16px 0;
+  }
+
+  /* Show sleek bottom navigation bar */
+  .ohf-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 55;
+    background: rgba(11, 15, 14, 0.94);
+    backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
+    padding: 5px 12px calc(5px + env(safe-area-inset-bottom, 8px));
+  }
+
+  .ohf-bottom-nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    gap: 4px;
+  }
+
+  .ohf-bottom-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-width: 0;
+    height: 48px;
+    padding: 3px 2px;
+    border: none;
+    background: transparent;
+    border-radius: 12px;
+    color: var(--tx3);
+    cursor: pointer;
+    transition: all 0.16s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ohf-bottom-tab:active {
+    transform: scale(0.93);
+  }
+
+  .ohf-bottom-tab-icon-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 22px;
+  }
+
+  .ohf-bottom-tab-label {
+    font-size: 10.5px;
+    font-weight: 550;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.16s ease;
+  }
+
+  .ohf-bottom-tab[data-active] {
+    color: var(--accent);
+  }
+
+  .ohf-bottom-tab[data-active] .ohf-bottom-tab-label {
+    color: var(--tx);
+    font-weight: 650;
+  }
+
+  .ohf-bottom-tab-active-dot {
+    position: absolute;
+    bottom: -3px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+  }
+
+  .ohf-bottom-tab-dot {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  /* Move composer dock cleanly above the bottom navbar */
+  .ohf-dock {
+    bottom: calc(58px + env(safe-area-inset-bottom, 8px)) !important;
+  }
+
+  /* Give gallery sufficient padding at bottom so cards aren't clipped */
+  .ohf-gallery {
+    padding-bottom: calc(180px + 58px + env(safe-area-inset-bottom, 8px)) !important;
+  }
+
   .ohf-viewer-panel {
     flex-direction: column;
   }
@@ -3572,6 +3729,7 @@ a.ohf-btn-solid {
      line rather than an ellipsis. */
   .ohf-starter-text {
     -webkit-line-clamp: 3;
+    line-clamp: 3;
   }
   /* The panel now owns the column, so the contact sheet gives its padding back
      to the tiles and keeps two of them per row. */
@@ -3722,6 +3880,10 @@ a.ohf-btn-solid {
     animation: none;
     opacity: 1;
   }
+  /* Smooth scrolling is motion; honour the preference with an instant jump. */
+  .ohf-release-list {
+    scroll-behavior: auto;
+  }
   /* A timer bar forced to 0.01ms reads as "already expired". Better absent. */
   .ohf-undo-drain {
     display: none;
@@ -3732,5 +3894,1117 @@ a.ohf-btn-solid {
   .ohf-skeleton::before,
   .ohf-generate-sheen {
     display: none;
+  }
+}
+
+/* ---------- brand bar & topbar additions ---------- */
+
+.ohf-bar--brand {
+  padding: 0 14px;
+  background: var(--s1);
+  border: 1px solid var(--line);
+}
+.ohf-brand-block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* The pip says the studio is live, not that it is for sale: a still dot, no
+   bloom, no pulse. Lime is kept for things that are actually on. */
+.ohf-brand-glow-pip {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--tx3);
+}
+.ohf-brand-name {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--tx);
+}
+.ohf-brand-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--tx3);
+  border: 1px solid var(--line-2);
+}
+
+.ohf-topbar-act {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 11px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--tx2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.ohf-topbar-act:hover {
+  background: var(--s3);
+  color: var(--tx);
+  border-color: var(--line-2);
+}
+.ohf-sparkle-glyph {
+  color: var(--accent);
+  font-size: 13px;
+}
+.ohf-act-text {
+  font-size: 12px;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- pricing modal ---------- */
+
+.ohf-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(2, 4, 3, 0.85);
+  backdrop-filter: blur(14px) saturate(1.2);
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  animation: ohf-fade 0.22s ease;
+}
+
+.ohf-pricing-panel {
+  position: relative;
+  width: 100%;
+  max-width: 860px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #0d1110;
+  border: 1px solid var(--line-2);
+  border-radius: 18px;
+  box-shadow: var(--shadow-3);
+  padding: 24px 28px;
+  animation: ohf-rise 0.28s var(--ease-slide);
+}
+
+.ohf-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.ohf-pricing-headline {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ohf-award-badge {
+  align-self: flex-start;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--s3);
+  border: 1px solid var(--line-2);
+  color: var(--tx2);
+}
+
+.ohf-modal-title {
+  font-size: 22px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: var(--tx);
+}
+
+.ohf-modal-desc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--tx2);
+  max-width: 60ch;
+}
+
+.ohf-pricing-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--s1);
+  margin-bottom: 20px;
+}
+
+.ohf-pricing-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+}
+
+.ohf-pricing-table th,
+.ohf-pricing-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ohf-pricing-table th {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--tx3);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ohf-th-highlight {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-left: 2px solid var(--accent);
+  border-right: 2px solid var(--accent);
+}
+
+.ohf-brand-tag {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+}
+
+.ohf-td-feat {
+  font-weight: 600;
+  color: var(--tx);
+  white-space: nowrap;
+}
+
+.ohf-td-highlight {
+  background: rgba(255, 255, 255, 0.02);
+  border-left: 2px solid var(--accent);
+  border-right: 2px solid var(--accent);
+  color: var(--tx);
+}
+
+.ohf-td-highlight strong {
+  color: var(--accent);
+}
+
+.ohf-pricing-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 6px;
+}
+
+.ohf-pricing-footnote {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--tx2);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 10px 14px;
+  border-radius: 8px;
+  border-left: 3px solid var(--accent);
+}
+
+.ohf-pricing-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.ohf-btn-subtle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 16px;
+  border-radius: 8px;
+  background: var(--s2);
+  border: 1px solid var(--line-2);
+  color: var(--tx);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.16s ease;
+}
+
+.ohf-btn-subtle:hover {
+  background: var(--s3);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.ohf-btn-accent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 18px;
+  border-radius: 8px;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--accent-ink);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.ohf-btn-accent:hover {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+}
+
+
+/* =========================================================
+   PROFESSIONAL STUDIO — work surfaces
+   Everything below serves the run itself: its price, its
+   progress, the face it holds, the order it ships in.
+   ========================================================= */
+
+/* ---------- running tile: progress and forecast ---------- */
+
+/* Track plus fill, under the clock. The fill is scaled rather than widened —
+   one compositor-only property, updated once a second, on a grid that may hold
+   a dozen of these at once. */
+.ohf-skeleton-bar {
+  position: relative;
+  z-index: 1;
+  width: 56%;
+  max-width: 190px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--s4);
+  overflow: hidden;
+}
+.ohf-skeleton-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--tx3);
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 0.9s linear;
+}
+.ohf-skeleton-eta {
+  position: relative;
+  z-index: 1;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--tx4);
+}
+/* A run past its own window says so in the ink the label uses — still quiet,
+   but no longer the same as every other wait on the board. */
+.ohf-skeleton-eta[data-over] {
+  color: var(--tx2);
+}
+
+/* ---------- the price pill ---------- */
+
+/* Rides with the button that spends the money: quiet enough to ignore, exact
+   enough to trust. Never a bare "$0.00" — a model with no published rate
+   renders no pill at all rather than a false price. */
+.ohf-cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  height: 36px;
+  padding: 0 11px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+  cursor: default;
+}
+.ohf-cost-unit {
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--tx3);
+}
+.ohf-cost-sep {
+  font-size: 11px;
+  color: var(--tx-off);
+}
+.ohf-cost-total {
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: -0.008em;
+  font-variant-numeric: tabular-nums;
+  color: var(--tx);
+}
+
+/* ---------- the large-batch confirmation ---------- */
+
+/* Not a dialog: the arm state lives in the composer's own column, so the
+   second press is the one button that was already under the cursor. */
+.ohf-confirm {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 9px 8px 13px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line-2);
+  animation: ohf-rise 0.22s var(--ease-slide) both;
+}
+.ohf-confirm-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--tx2);
+}
+.ohf-confirm-go {
+  flex: none;
+  height: 32px;
+  padding: 0 13px;
+  border-radius: 9px;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--accent-ink);
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.ohf-confirm-go:hover {
+  background: var(--accent-strong);
+}
+
+/* ---------- topbar: unread release pip ---------- */
+
+/* Lime is allowed here because it reports state the visitor has not seen. */
+.ohf-topbar-unread {
+  width: 6px;
+  height: 6px;
+  margin-left: 1px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: ohf-pulse 2.4s ease-in-out infinite;
+}
+
+/* ---------- character panel ---------- */
+
+.ohf-popover--character {
+  width: min(460px, 100%);
+  max-height: min(64vh, 520px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.ohf-char-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 11px 12px 15px;
+  border-bottom: 1px solid var(--line);
+}
+.ohf-char-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ohf-char-title {
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.012em;
+  color: var(--tx);
+}
+.ohf-char-sub {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--tx3);
+  max-width: 42ch;
+}
+.ohf-char-list {
+  list-style: none;
+  margin: 0;
+  padding: 7px 7px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 188px;
+  overflow-y: auto;
+}
+.ohf-char-item {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: 11px;
+  border: 1px solid transparent;
+}
+/* Selection is the studio's one loud state, and it is earned: this is the face
+   every subsequent run will hold. */
+.ohf-char-item[data-on] {
+  background: var(--accent-08);
+  border-color: var(--accent-32);
+}
+.ohf-char-pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 10px;
+  border-radius: 10px;
+  text-align: left;
+}
+.ohf-char-pick:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.ohf-char-mark {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  border: 1px solid var(--line-2);
+  display: grid;
+  place-items: center;
+  color: var(--accent-ink);
+}
+.ohf-char-item[data-on] .ohf-char-mark {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.ohf-char-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--tx);
+}
+.ohf-char-item[data-on] .ohf-char-name {
+  font-weight: 600;
+}
+.ohf-char-count {
+  flex: none;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--tx4);
+}
+.ohf-char-del {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  margin-right: 5px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: var(--tx3);
+}
+.ohf-char-del:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+.ohf-char-new {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 11px;
+  border-bottom: 1px solid var(--line);
+}
+.ohf-char-input {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  background: var(--s1);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  font-size: 13px;
+  color: var(--tx);
+  outline: none;
+}
+.ohf-char-input::placeholder {
+  color: var(--tx4);
+}
+.ohf-char-input:focus-visible {
+  border-color: var(--accent-32);
+  outline: none;
+}
+.ohf-char-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 9px;
+  background: var(--s3);
+  border: 1px solid var(--line-2);
+  color: var(--tx);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.ohf-char-add:hover {
+  background: var(--s4);
+}
+.ohf-char-refs {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 11px;
+}
+.ohf-char-refs-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 1px 9px;
+}
+.ohf-char-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--tx3);
+}
+.ohf-char-tally {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--tx4);
+}
+.ohf-char-empty {
+  padding: 14px 15px 16px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--tx4);
+}
+
+/* ---------- craft panel (prompt pills) ---------- */
+
+.ohf-popover--craft {
+  width: min(340px, 100%);
+  max-height: min(62vh, 540px);
+  overflow-y: auto;
+  padding: 13px 12px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ohf-craft-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.ohf-craft-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.ohf-craft-name {
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.012em;
+  color: var(--tx);
+}
+.ohf-craft-sub {
+  font-size: 11.5px;
+  color: var(--tx3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ohf-craft-dice {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: var(--s3);
+  border: 1px solid var(--line-2);
+  color: var(--tx2);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.ohf-craft-dice:hover {
+  background: var(--s4);
+  color: var(--tx);
+}
+.ohf-craft-restore {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: var(--s3);
+  border: 1px solid var(--line-2);
+  color: var(--tx2);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.ohf-craft-restore:hover {
+  background: var(--s4);
+  color: var(--tx);
+}
+.ohf-craft-tips {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--line);
+}
+.ohf-craft-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--tx3);
+}
+.ohf-craft-tip-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ohf-craft-tip {
+  position: relative;
+  padding-left: 13px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--tx2);
+}
+.ohf-craft-tip::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 8px;
+  width: 4px;
+  height: 1px;
+  background: var(--tx4);
+}
+.ohf-craft-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.ohf-craft-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.ohf-craft-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid var(--line);
+  color: var(--tx2);
+  font-size: 12px;
+  font-weight: 500;
+  transition:
+    background 0.14s ease,
+    border-color 0.14s ease,
+    color 0.14s ease;
+}
+.ohf-craft-tag:hover {
+  background: var(--s3);
+  border-color: var(--line-2);
+  color: var(--tx);
+}
+/* Shot presets write settings as well as words, so they read one step louder
+   than a plain prompt tag. */
+.ohf-craft-tag--shot {
+  background: var(--accent-08);
+  border-color: var(--accent-32);
+  color: var(--tx);
+  font-weight: 600;
+}
+.ohf-craft-tag--shot:hover {
+  background: var(--accent-14);
+  border-color: var(--accent);
+  color: var(--tx);
+}
+.ohf-craft-foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--tx4);
+}
+
+/* ---------- release log ---------- */
+
+.ohf-release-panel {
+  position: relative;
+  width: 100%;
+  max-width: 680px;
+  max-height: min(85vh, 720px);
+  background: #0d1110;
+  border: 1px solid var(--line-2);
+  border-radius: 20px;
+  box-shadow: var(--shadow-3), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: ohf-rise 0.28s var(--ease-slide);
+}
+.ohf-release-panel .ohf-modal-header {
+  padding: 22px 26px 16px;
+  margin-bottom: 0;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--line);
+}
+.ohf-release-list {
+  list-style: none;
+  margin: 0;
+  padding: 18px 26px 22px;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--s4) transparent;
+}
+.ohf-release-list::-webkit-scrollbar {
+  width: 6px;
+}
+.ohf-release-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ohf-release-list::-webkit-scrollbar-thumb {
+  background: var(--s4);
+  border-radius: 3px;
+}
+.ohf-release-list::-webkit-scrollbar-thumb:hover {
+  background: var(--tx4);
+}
+.ohf-release-panel .ohf-pricing-footer {
+  padding: 14px 26px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--line);
+  background: rgba(13, 17, 16, 0.95);
+  backdrop-filter: blur(8px);
+}
+.ohf-release {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 14px;
+  padding: 15px 2px;
+  border-top: 1px solid var(--line);
+}
+.ohf-release:first-child {
+  border-top: 0;
+  padding-top: 4px;
+}
+.ohf-release-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+}
+.ohf-release-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--s4);
+}
+.ohf-release[data-fresh] .ohf-release-dot {
+  background: var(--accent);
+}
+.ohf-release-version {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--tx3);
+}
+.ohf-release[data-fresh] .ohf-release-version {
+  color: var(--tx);
+}
+.ohf-release-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.ohf-release-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -0.012em;
+  color: var(--tx);
+}
+.ohf-release-chip {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.ohf-release-date {
+  font-size: 11px;
+  color: var(--tx4);
+}
+.ohf-release-notes {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.ohf-release-notes li {
+  position: relative;
+  padding-left: 14px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--tx2);
+}
+.ohf-release-notes li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 8px;
+  width: 4px;
+  height: 1px;
+  background: var(--tx4);
+}
+@media (max-width: 640px) {
+  .ohf-release-panel {
+    max-height: 90vh;
+    border-radius: 16px;
+    margin: 8px;
+  }
+  .ohf-release-panel .ohf-modal-header {
+    padding: 16px 18px 12px;
+  }
+  .ohf-release-list {
+    padding: 12px 18px 16px;
+  }
+  .ohf-release {
+    grid-template-columns: 72px 1fr;
+    gap: 8px;
+    padding: 12px 0;
+  }
+  .ohf-release-panel .ohf-pricing-footer {
+    padding: 12px 18px;
+  }
+}
+@media (max-width: 560px) {
+  .ohf-release {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .ohf-release-rail {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+/* ---------- sequence preview ---------- */
+
+.ohf-seq-panel {
+  width: min(880px, 100%);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px 16px;
+  background: #0d1110;
+  border: 1px solid var(--line-2);
+  border-radius: 18px;
+  box-shadow: var(--shadow-3);
+  animation: ohf-rise 0.28s var(--ease-slide);
+}
+.ohf-seq-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ohf-seq-title {
+  font-size: 16px;
+  font-weight: 680;
+  letter-spacing: -0.016em;
+  color: var(--tx);
+}
+.ohf-seq-sub {
+  margin-top: 3px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--tx3);
+}
+.ohf-seq-stage {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.ohf-seq-media {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+.ohf-seq-missing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 0 24px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--tx3);
+}
+.ohf-seq-skip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 9px;
+  background: var(--s3);
+  border: 1px solid var(--line-2);
+  color: var(--tx);
+  font-size: 12px;
+  font-weight: 600;
+}
+.ohf-seq-skip:hover {
+  background: var(--s4);
+}
+.ohf-seq-hud {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  border-radius: 12px;
+  background: var(--plate);
+  border: 1px solid var(--line-2);
+  backdrop-filter: blur(14px);
+  color: var(--plate-ink);
+}
+.ohf-seq-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  color: var(--plate-ink);
+}
+.ohf-seq-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+.ohf-seq-btn:disabled {
+  color: var(--tx-off);
+}
+.ohf-seq-counter {
+  padding: 0 4px;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.ohf-seq-hud-gap {
+  flex: 1;
+}
+.ohf-seq-strip {
+  list-style: none;
+  margin: 0;
+  padding: 2px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+.ohf-seq-thumb {
+  position: relative;
+  width: 96px;
+  height: 54px;
+  flex: none;
+  border-radius: 9px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--s1);
+}
+.ohf-seq-thumb[data-on] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-32);
+}
+.ohf-seq-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ohf-seq-thumb-art {
+  position: absolute;
+  inset: 0;
+}
+.ohf-seq-thumb-n {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 5px;
+  display: grid;
+  place-items: center;
+  background: var(--plate);
+  color: var(--plate-ink);
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.ohf-seq-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.ohf-seq-note {
+  max-width: 52ch;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--tx4);
+}
+.ohf-seq-foot .ohf-btn-accent:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+@media (max-width: 620px) {
+  .ohf-seq-foot {
+    flex-direction: column;
+    align-items: stretch;
   }
 }

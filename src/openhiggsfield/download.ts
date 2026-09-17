@@ -25,15 +25,30 @@ export async function saveFile(url: string, name: string): Promise<boolean> {
 
 /** A saved run has to be findable in a downloads folder six months later, so
     the name carries the prompt rather than the platform's request id. */
-export function fileNameFor(record: RunRecord, index: number): string {
-  const url = record.urls[0] ?? "";
-  const ext = /\.([a-z0-9]{2,4})(?:[?#]|$)/i.exec(url)?.[1]?.toLowerCase();
-  const slug =
+function slugOf(record: RunRecord): string {
+  return (
     record.prompt
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
       .slice(0, 44)
-      .replace(/-+$/, "") || "run";
-  return `openhiggsfield-${slug}-${index + 1}.${ext ?? (record.kind === "video" ? "mp4" : "png")}`;
+      .replace(/-+$/, "") || "run"
+  );
+}
+
+function extOf(record: RunRecord): string {
+  const url = record.urls[0] ?? "";
+  const ext = /\.([a-z0-9]{2,4})(?:[?#]|$)/i.exec(url)?.[1]?.toLowerCase();
+  return ext ?? (record.kind === "video" ? "mp4" : "png");
+}
+
+export function fileNameFor(record: RunRecord, index: number): string {
+  return `openhiggsfield-${slugOf(record)}-${index + 1}.${extOf(record)}`;
+}
+
+/* A sequence is ordered, so its names have to be too. Two digits sort correctly
+   in every file browser and every ffmpeg concat list up to 99 beats; a third
+   digit simply beats a two-digit name and keeps the run together. */
+export function sequenceFileName(record: RunRecord, index: number): string {
+  return `${String(index + 1).padStart(2, "0")}-${slugOf(record)}.${extOf(record)}`;
 }

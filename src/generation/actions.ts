@@ -12,14 +12,23 @@ import {
   encodeCredentials,
   parseCredentialInput,
 } from "./credentials";
-import { createPlatformClient } from "./platform";
-import type { StatusResult } from "./platform";
+import { PlatformError, createPlatformClient, type QueuedGeneration, type StatusResult } from "./platform";
 import { toPlatform } from "./to-platform";
 
-export async function savePlatformCredentials(data: unknown) {
-  const { apiKey } = parseCredentialInput(data);
-  const jar = await cookies();
-  jar.set(PLATFORM_KEY_COOKIE, encodeCredentials(apiKey), PLATFORM_KEY_COOKIE_OPTIONS);
+export type SubmitResult =
+  | ({ ok: true } & QueuedGeneration)
+  | { ok: false; error: string; status?: number; requiresKey?: boolean };
+
+export async function savePlatformCredentials(data: unknown): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const { apiKey } = parseCredentialInput(data);
+    const jar = await cookies();
+    jar.set(PLATFORM_KEY_COOKIE, encodeCredentials(apiKey), PLATFORM_KEY_COOKIE_OPTIONS);
+    return { ok: true };
+  } catch (caught) {
+    const message = caught instanceof Error ? caught.message : "Invalid API key format";
+    return { ok: false, error: message };
+  }
 }
 
 export async function clearPlatformCredentials() {
@@ -31,14 +40,36 @@ export async function hasPlatformCredentials() {
   return (await readStoredCredentials()) !== null;
 }
 
-export async function submitGeneration(plane: GenerationPlane) {
-  const model = getModel(plane.model);
-  const parsed: GenerationPlane = {
-    ...plane,
-    settings: parseSettings(model, plane.settings),
-  };
-  const { path, body } = toPlatform(parsed);
-  return createPlatformClient(await readCredentials()).submit(path, body);
+export async function submitGeneration(plane: GenerationPlane): Promise<SubmitResult> {
+  try {
+    const model = getModel(plane.model);
+    const parsed: GenerationPlane = {
+      ...plane,
+      settings: parseSettings(model, plane.settings),
+    };
+    const { path, body } = toPlatform(parsed);
+    const creds = await readCredentials();
+    const queued = await createPlatformClient(creds).submit(path, body);
+    return { ok: true, ...queued };
+  } catch (caught) {
+    if (caught instanceof MissingCredentialsError) {
+      return { ok: false, error: "Missing platform key", requiresKey: true };
+    }
+    if (caught instanceof PlatformError) {
+      const status = caught.status;
+      const requiresKey = status === 401 || status === 403;
+      return {
+        ok: false,
+        error: caught.message,
+        status,
+        requiresKey,
+      };
+    }
+    return {
+      ok: false,
+      error: caught instanceof Error ? caught.message : "Generation failed",
+    };
+  }
 }
 
 /** Every request in flight, answered in one round trip. Next dispatches server
@@ -46,8 +77,30 @@ export async function submitGeneration(plane: GenerationPlane) {
     next submit — the fan-out belongs on this side of the call, where it is
     genuinely parallel. */
 export async function getGenerationStatuses(data: unknown): Promise<StatusResult[]> {
-  const requestIds = parseRequestIds(data);
-  const client = createPlatformClient(await readCredentials());
+  let requestIds: string[];
+  try {
+    requestIds = parseRequestIds(data);
+  } catch {
+    return [];
+  }
+
+  let client;
+  try {
+    client = createPlatformClient(await readCredentials());
+  } catch (caught) {
+    if (caught instanceof MissingCredentialsError) {
+      return requestIds.map((requestId) => ({
+        requestId,
+        error: "Missing platform key",
+      }));
+    }
+    const message = caught instanceof Error ? caught.message : String(caught);
+    return requestIds.map((requestId) => ({
+      requestId,
+      error: message,
+    }));
+  }
+
   return Promise.all(
     requestIds.map(async (requestId): Promise<StatusResult> => {
       try {

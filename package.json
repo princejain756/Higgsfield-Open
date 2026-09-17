@@ -9,6 +9,7 @@
     "brand": "node scripts/build-brand-assets.mjs"
   },
   "dependencies": {
+    "@iconify/react": "^6.0.2",
     "@tanstack/react-virtual": "^3.14.10",
     "@vercel/blob": "^2.8.0",
     "next": "^16.0.0",
@@ -17,6 +18,8 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@iconify-json/lucide": "^1.2.132",
+    "@iconify-json/solar": "^1.2.10",
     "@types/node": "^22.10.2",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",

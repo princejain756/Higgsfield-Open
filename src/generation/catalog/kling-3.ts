@@ -25,6 +25,7 @@ export const kling3Turbo: ModelEntry = {
   label: "Kling 3.0 Turbo",
   roles: { start: 1 },
   settings: klingTurboSettings,
+  cost: { unit: "second", milliCents: 45 },
 };
 
 export const kling3Std: ModelEntry = {
@@ -33,6 +34,7 @@ export const kling3Std: ModelEntry = {
   label: "Kling 3.0 Standard",
   roles: { start: 1, end: 1 },
   settings: kling3Settings,
+  cost: { unit: "second", milliCents: 42 },
 };
 
 export const kling3Pro: ModelEntry = {
@@ -41,6 +43,7 @@ export const kling3Pro: ModelEntry = {
   label: "Kling 3.0 Pro",
   roles: { start: 1, end: 1 },
   settings: kling3Settings,
+  cost: { unit: "second", milliCents: 75 },
 };
 
 export const kling34k: ModelEntry = {
@@ -49,6 +52,7 @@ export const kling34k: ModelEntry = {
   label: "Kling 3.0 4K",
   roles: { start: 1, end: 1 },
   settings: kling3Settings,
+  cost: { unit: "second", milliCents: 120 },
 };
 
 export const kling3MotionStd: ModelEntry = {
@@ -57,6 +61,7 @@ export const kling3MotionStd: ModelEntry = {
   label: "Kling 3.0 Motion Control",
   roles: { start: 1, video: 1 },
   settings: klingMotionSettings,
+  cost: { unit: "second", milliCents: 65 },
 };
 
 export const kling3MotionPro: ModelEntry = {
@@ -65,4 +70,5 @@ export const kling3MotionPro: ModelEntry = {
   label: "Kling 3.0 Motion Control Pro",
   roles: { start: 1, video: 1 },
   settings: klingMotionSettings,
+  cost: { unit: "second", milliCents: 90 },
 };
