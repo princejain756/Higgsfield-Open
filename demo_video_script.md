@@ -1,71 +1,78 @@
-# OpenHiggsfield — 60-Second Video Demo Production Master & X/Twitter Launch Plan
+# OpenHiggsfield — The $50k Bounty Master Video Script & Launch Playbook
 
-> **Target**: Alisher S ([@gpumaxxer](https://x.com/gpumaxxer)) & Higgsfield AI Team  
-> **Challenge**: $50,000 Bounty for building a real Higgsfield competitor powered by the Higgsfield API.  
+> **Target**: Alisher Shaikhov ([@gpumaxxer](https://x.com/gpumaxxer)), Founder & CEO of Higgsfield AI  
+> **Challenge**: $50,000 Bounty for building a real Higgsfield competitor people actually use, powered by Higgsfield API.  
 > **Live Production**: [https://higgsfield.prince.sh](https://higgsfield.prince.sh)  
-> **Open Source Code**: [https://github.com/princejain756/Higgsfield-Open](https://github.com/princejain756/Higgsfield-Open)
+> **Open Source Repository**: [https://github.com/princejain756/Higgsfield-Open](https://github.com/princejain756/Higgsfield-Open)  
+> **Engineered via**: Devinflow Multi-Model Pipeline (SWE-2 Max Deep Reasoning & Architecture)
 
 ---
 
-## 🎯 Strategic Blueprint: How to Win the $50k Bounty
+## 🎯 Executive Strategy: Decoding Alisher's Mind
 
-### 1. The Core Psychology of the Post
-Alisher's tweet was deliberately provocative: *"I'll personally give $50k to whoever builds something people actually fcking use. QT this with your demo. You have 7 days."*
+Alisher is an ex-Snap AI executive, GPU infrastructure purist, and founder of a venture-backed startup. When he announced:
+> *"I'll personally give $50k to whoever builds something people actually f***ing use. QT this with your demo. You have 7 days."*
 
-- **What gets ignored**: 
-  - Superficial wrappers with basic Tailwind templates.
-  - "Toy" projects with broken buttons or fake mocked outputs.
-  - Vague vision pitches with no working code or live URL.
-- **What wins**:
-  - **Speed & Conviction**: Delivering a live, fully deployed, production-grade application on a custom domain within 48 hours.
-  - **Solving the #1 User Pain Point**: Every review of Higgsfield complains about the *"online casino"* sensory overload (flashing previews, 20+ disconnected tabs, hidden subscription math). We deliver an elegant, obsidian, distraction-free creative studio (similar to Linear or Runway).
-  - **Honoring the Moat**: Highlighting the Higgsfield API's true superpower—**Seedance 2.5 with direct US Face Inputs**—and showing that our studio unlocks this capability better than any existing interface.
-  - **Zero Markup / BYOK**: True developer sovereignty—exact platform rates in cents on the button ($0.144/s Seedance 2.5, $0.003 Soul 2), with zero platform fees.
+### Why 99% of Submissions Will Lose
+1. **The "Model Zoo" Clone**: Generic reskins of the raw open-source codebase with zero workflow utility. Alisher built that code; he won't pay $50k for his own work.
+2. **Ignoring His Flagship Moat**: Alisher explicitly stated: *"Seedance 2.5 in the US, with face inputs. No other provider offers that. 👀"* Any submission that doesn't put **Face-Lock character continuity** front and center throws away his primary moat.
+3. **The Empty Canvas Trap**: Demanding users write 100-word prompts with 50 sliders. Real creators need 1-click camera presets, transparent costs, and multi-shot continuity.
+
+### How OpenHiggsfield Wins
+- **Direct Contrast to Higgsfield's Flaws**: Solves the #1 community complaint—the *"online casino"* sensory overload (flashing ads, 20+ tabs, confusing credit math). Delivers a calm, obsidian, Linear/Runway-grade cockpit.
+- **Unlocking the Moat**: Proves that **Seedance 2.5 US Face-Lock** enables real multi-shot cinematic character continuity.
+- **Zero Markup Sovereignty**: 100% BYOK with exact platform rates calculated in cents on the button ($0.144/s Seedance 2.5 &rarr; exact $0.72 for 5s; $0.003 Soul 2).
+- **Mobile-First Reality**: Alisher and X users browse on iPhones. Shipped with a native **Bottom Navigation Bar** and responsive safe-area insets.
 
 ---
 
-## ⏱️ Second-by-Second Video Recording Choreography (60s Master)
+## 🎬 55-Second Master Video Choreography (Beat-by-Beat)
 
-| Timestamp | Visual Action (Screen Choreography) | Framing / Zoom | Spoken Narration (Vocal Cadence) | Kinetic Typography Overlay | Sound Design |
+```
+[0:00 - 0:04] Hook: Pattern Interrupt (Calm vs Casino)
+[0:04 - 0:18] Feature 1: Seedance 2.5 US Face-Lock (Multi-Angle Continuity)
+[0:18 - 0:28] Feature 2: Prompt Craft (1-Click Camera Moves & Lighting)
+[0:28 - 0:38] Feature 3: Pricing Honesty & Real-Time Queue Telemetry
+[0:38 - 0:46] Feature 4: Side-by-Side Benchmark & Sequence Playback
+[0:46 - 0:52] Feature 5: Mobile & Tablet Bottom Navigation Overhaul
+[0:52 - 0:55] Closer: 100% Open Source BYOK + Live URLs
+```
+
+### Detailed Recording Choreography Table
+
+| Timecode | Screen Choreography (What to Click & Show) | Camera Framing & Zoom | Spoken Narration (Vocal Cadence & Stress) | Burned-In Kinetic Captions (Inter 48px Bold) | Sound Design |
 |---|---|---|---|---|---|
-| **0:00 – 0:08** | **The Hook**: Browser opens on `https://higgsfield.prince.sh`. Smooth cursor hover over the dark obsidian canvas and clean composer dock. | Full screen (1080p), slow subtle zoom in (1.05x) | *"Alisher challenged builders to create a Higgsfield competitor people actually use. So we fixed the biggest problem with AI video today: the noisy, flashing casino UI. Meet **OpenHiggsfield**."* | `Zero Ads. Zero Casino Loops.`<br>`Pure Obsidian Studio.` | Low ambient sub-bass swell, subtle mechanical click on focus |
-| **0:08 – 0:22** | **The Superpower (Face-Lock)**: Cursor clicks **Face-lock** in composer. *Characters* panel opens. Types `Elena`, hits `+ Add`. Shows *Reference stills* shelf unlock, clicks **Upload** to attach headshots. | 1.2x focus on Character Panel popover | *"Powered directly by the Higgsfield API. Seedance 2.5 with direct US face inputs. Name a character, attach your reference stills, and lock facial geometry across every camera angle and scene."* | `Seedance 2.5 US Face-Lock`<br>`30 Reference Stills · True Continuity` | Soft "snap" sound when character is added, gentle pop on still select |
-| **0:22 – 0:34** | **Prompt Craft & Camera Moves**: Clicks **Craft** button. Clicks **Orbit**, **Slow Push-In**, and **Volumetric Rim Light**—show tokens drop into prompt bar. Shows model cheat sheet tab. | 1.15x focus on composer prompt bar | *"Prompt Craft drops camera moves, framing, and lighting directly into your prompt—tuned to each model's native settings. No more prompt guessing."* | `1-Click Camera Moves`<br>`Per-Model Cheat Sheets` | Crisp digital key clack, smooth swoosh as tags snap into prompt |
-| **0:34 – 0:44** | **Pricing Honesty**: Hovers on Generate button displaying `≈ $0.576`. Clicks **Compare** in topbar: side-by-side benchmark table opens (Higgsfield vs Runway, Luma, Kling). | 1.1x zoom on price pill, then cuts to Compare modal | *"Every generation shows exact platform rates in cents before you press it—zero platform fee, zero markup. Click Compare to see live rates side-by-side against Runway and Luma."* | `Zero Markup · Exact Platform Rates`<br>`$0.144/s Seedance · $0.003 Soul 2` | Clean metallic chime on hover |
-| **0:44 – 0:54** | **Mobile & Tablet Bottom Nav**: Show browser collapsing to iPad / iPhone viewport (`390px`). Sleek bottom navigation bar appears (`Video`, `Image`, `Assets`, `Favorites`, `Updates`). Taps between tabs, opens Changelog. | Viewport switch to mobile frame with blur backdrop | *"38 frontier models under one composer. Built mobile-first with a dedicated bottom navigation bar for phones and iPads."* | `38 Frontier Models`<br>`Desktop, iPad & Mobile Bottom Nav` | Smooth slide transition whoosh, haptic click on bottom tab |
-| **0:54 – 1:00** | **The Closer**: Cursor moves to the open GitHub repo and back to the live URL. | Wide shot on `higgsfield.prince.sh` | *"100% open source. BYOK. Try it live at higgsfield.prince.sh."* | `Live: higgsfield.prince.sh`<br>`Code: github.com/princejain756/Higgsfield-Open` | Final musical resolution note |
+| **0:00 – 0:04** | **The Hook**: Start on `https://higgsfield.prince.sh`. Smooth cursor hover over the dark obsidian canvas and composer dock. No ads, no popups. | Full 1080p, subtle zoom-in (1.05x) | *"Alisher asked for something people **actually use** — not another flashing casino loop or 20-tab model zoo. Meet **OpenHiggsfield**."* | `ZERO CASINO LOOPS.`<br>`PURE OBSIDIAN STUDIO.` | Low ambient sub-bass swell, subtle mechanical click |
+| **0:04 – 0:18** | **Face-Lock Continuity**: Select **Seedance 2.5**. Click **Face-lock**. Character panel opens. Type `Founder` (or `Hero`), click `+ Add`. Click **Upload** to attach reference face stills. | 1.25x crop on Characters Popover & Reference Grid | *"Powered directly by the Higgsfield API. Seedance 2.5 with direct US face inputs. Name a character, attach up to 30 reference stills, and lock facial geometry across every camera angle."* | `SEEDANCE 2.5 · US FACE-LOCK`<br>`30 STILLS · MULTI-ANGLE CONTINUITY` | Gentle pop on still select, soft lock chime |
+| **0:18 – 0:28** | **Prompt Craft & Camera Moves**: Click **Craft**. Click **Orbit**, **Slow Push-In**, and **Volumetric Light** — show tokens snap into the prompt bar. Click cheat sheets. | 1.2x focus on prompt bar and Craft tags | *"Prompt Craft drops camera moves, framing, and lighting directly into your prompt — tuned to each model's native settings. No more prompt guessing."* | `1-CLICK CAMERA MOVES`<br>`PER-MODEL CHEAT SHEETS` | Crisp digital key clacks, smooth whoosh |
+| **0:28 – 0:38** | **Pricing Honesty & Live Generation**: Hover over Generate button showing `≈ $0.72` ($0.144/s × 5s). **Press Generate**. Tile skeleton opens with live progress ring & ETA. Cut to finished video. | 1.15x zoom on Generate button, then wide on gallery tile | *"Exact platform rates in cents before you press it — zero markup. Hit Generate: real-time progress tracker, honest countdown, and zero fake queues."* | `EXACT PLATFORM RATES: $0.72`<br>`REAL-TIME PROGRESS & ETA` | Clean metallic chime, subtle generation hum |
+| **0:38 – 0:46** | **Benchmark & Sequence Player**: Click **Compare** in topbar: side-by-side table opens vs Runway/Luma. Select 2 clips and click **Play Sequence** to preview multi-shot cuts. | Focus on Compare Modal, then Sequence Player | *"Click Compare to see live rates side-by-side against Runway and Luma. Preview your shots in order, rearrange beats, and export numbered clips."* | `LIVE BENCHMARK VS RUNWAY / LUMA`<br>`MULTI-CLIP SEQUENCE PREVIEW` | Crisp paper-flip sound, smooth playback cut |
+| **0:46 – 0:52** | **Mobile & Tablet Bottom Nav**: Collapse browser or switch to iPhone/iPad view (`390px`). Show the sleek **Bottom Navigation Bar** (`Video`, `Image`, `Assets`, `Favorites`, `Updates`). Tap **Updates** to scroll Changelog. | Mobile viewport centered with blurred dark background | *"38 frontier models under one composer. Built mobile-first with a dedicated bottom navigation bar for phones and iPads."* | `38 FRONTIER MODELS`<br>`MOBILE & TABLET BOTTOM NAV` | Haptic click, smooth fluid scroll |
+| **0:52 – 0:55** | **The Closer**: Quick cut showing `github.com/princejain756/Higgsfield-Open` and `higgsfield.prince.sh`. | Clean end-card with live links | *"100% open source. BYOK. Try it live right now at **higgsfield.prince.sh**."* | `LIVE: HIGGSFIELD.PRINCE.SH`<br>`GITHUB: PRINCEJAIN756/HIGGSFIELD-OPEN` | Final musical resolution chime |
 
 ---
 
-## 🎙️ Word-for-Word Audio Tracks
+## 🎙️ Spoken Narration Script (128 Words / ~52 Seconds)
 
-### Option A: Spoken Voiceover (Natural, confident builder tone)
-> *"Alisher challenged builders to create a Higgsfield competitor people actually use. So we fixed the biggest problem with AI video today: the noisy, flashing casino UI. Meet OpenHiggsfield.*
+> *"Alisher asked for something people actually use — not another flashing casino loop or 20-tab model zoo. Meet OpenHiggsfield.*
 > 
-> *Powered directly by the Higgsfield API. Seedance 2.5 with direct US face inputs. Name a character, attach your reference stills, and lock facial geometry across every camera angle and scene.*
+> *Powered directly by the Higgsfield API. Seedance 2.5 with direct US face inputs. Name a character, attach up to 30 reference stills, and lock facial geometry across every camera angle.*
 > 
-> *Prompt Craft drops camera moves, framing, and lighting directly into your prompt—tuned to each model's native settings. No more prompt guessing.*
+> *Prompt Craft drops camera moves, framing, and lighting directly into your prompt — tuned to each model's native settings. No more prompt guessing.*
 > 
-> *Every generation shows exact platform rates in cents before you press it—zero platform fee, zero markup. Click Compare to see live rates side-by-side against Runway and Luma.*
+> *Exact platform rates in cents before you press it — zero markup. Hit Generate: real-time progress tracker, honest countdown, and zero fake queues.*
+> 
+> *Click Compare to see live rates side-by-side against Runway and Luma. Preview your shots in order, rearrange beats, and export numbered clips.*
 > 
 > *38 frontier models under one composer. Built mobile-first with a dedicated bottom navigation bar for phones and iPads.*
 > 
-> *100% open source. BYOK. Try it live at higgsfield.prince.sh."*
-
-### Option B: Silent Cut / Text-Only Captions (For auto-play on X)
-- **0:00**: `Tired of AI video studios feeling like flashing casino slot machines?`
-- **0:08**: `We built OpenHiggsfield. Powered by Higgsfield API.`
-- **0:15**: `Seedance 2.5 US Face-Lock — Multi-shot character continuity.`
-- **0:25**: `1-Click Camera Moves & Lighting Craft Pills.`
-- **0:35**: `Zero Markup. Exact platform rates in cents on the button.`
-- **0:45**: `38 Frontier Models · Sleek Mobile & Tablet Bottom Nav.`
-- **0:55**: `100% Open Source. Try it live: higgsfield.prince.sh`
+> *100% open source. BYOK. Try it live right now at higgsfield.prince.sh."*
 
 ---
 
-## 📱 The X / Twitter Launch Package
+## 📱 The X / Twitter Launch Submission
 
-### Main Quote Tweet (Quote Tweet Alisher's post @gpumaxxer)
+### Main Quote Tweet (Quote Tweet @gpumaxxer's challenge post)
 
 ```text
 You asked for something people actually f***ing use.
@@ -94,9 +101,10 @@ The architecture behind it:
 • Zero CSS framework bloat — 100% bespoke Vanilla CSS tokens
 • Client-side credential vault: Key ID + Secret Key stored in secure cookies routed directly to api.higgsfield.ai
 • Responsive viewport with iOS/Android safe-area insets
+• Independent IndexedDB local persistence
 ```
 
-### Thread Reply 2 (Community CTA):
+### Thread Reply 2 (Developer & Community CTA):
 ```text
 The code is completely open-sourced on GitHub. Clone it, run it locally in 60 seconds with `pnpm dev`, or deploy it to your own Vercel/VPS:
 
@@ -105,16 +113,14 @@ The code is completely open-sourced on GitHub. Clone it, run it locally in 60 se
 
 ---
 
-## 🛠️ Pre-Flight Recording Checklist
+## 🛠️ Pre-Recording Environment Checklist
 
-1. **Browser Setup**:
-   - Go to `https://higgsfield.prince.sh` in Chrome / Brave.
-   - Zoom level at 100% (or 110% if on 4K monitor for crisp legibility).
-   - Hide bookmarks bar (`Cmd+Shift+B` or `Ctrl+Shift+B`).
-2. **Audio Setup**:
-   - Use a clear USB microphone (e.g. Shure MV7, Rode, Blue Yeti).
-   - Speak with energetic, brisk pacing (~140–150 words per minute).
-   - If using AI voice generation (e.g. ElevenLabs), choose voices like "Adam" or "Antoni" with stability set to 0.50 for natural cadence.
-3. **Cursor Smoothing**:
-   - If using Screen Studio, select "Smooth Cursor" and "Auto Zoom" on clicks.
-   - If using OBS, set resolution to 1920x1080 @ 60fps.
+1. **Browser Profile**:
+   - Open Chrome / Brave at `1440x900` or `1920x1080` with 100% zoom.
+   - Hide bookmarks (`Cmd+Shift+B` / `Ctrl+Shift+B`) and extensions.
+2. **Seed History**:
+   - Ensure your studio has 4–6 completed video tiles in the grid so the gallery looks populated and professional.
+   - Have 1–2 headshot stills on your desktop ready for the Face-Lock upload step.
+3. **Audio / Captions**:
+   - Use high-quality voiceover (or clean ElevenLabs Adam/Antoni TTS).
+   - Burn in captions at bottom-third with Inter SemiBold (`#ffffff`) and neon lime highlight (`#c8ff00`) on keywords (`Face-Lock`, `$0.72`, `38 Models`, `Open Source`).
